@@ -1,0 +1,103 @@
+import time
+import thumby
+import math
+
+# BITMAP: width: 32, height: 32
+# bitmap0 = bytearray([0,0,0,0,0,0,0,0,248,8,232,40,40,40,40,40,40,40,40,40,40,232,8,248,0,0,0,0,0,0,0,
+#                      0,0,0,0,0,0,0,0,0,255,0,63,32,32,32,32,32,32,32,32,32,32,63,0,255,0,0,0,0,0,0,0,
+#                      0,0,0,0,0,0,0,0,0,255,0,12,12,63,63,12,12,0,0,24,24,3,3,0,255,0,0,0,0,0,0,0,0,0,
+#                      0,0,0,0,0,0,0,31,16,16,16,16,20,18,16,20,18,16,16,16,16,16,31,0,0,0,0,0,0,0,0])
+# BITMAP: width: 8, height: 8
+bitmap0 = bytearray([0,144,74,63,74,144,0,0])
+
+bitmap1 = bytearray([1])
+
+# BITMAP: width: 16, height: 8
+bitmap2 = bytearray([114,254,240,182,255,255,191,255,255,191,246,246,182,246,118,6])
+# BITMAP: width: 16, height: 8
+bitmap2_1 = bytearray([114,254,176,246,255,191,255,255,191,255,246,182,246,246,118,6])
+# BITMAP: width: 16, height: 8
+bitmap2_2 = bytearray([114,190,240,246,191,255,255,191,255,255,182,246,246,182,118,6])
+
+# BITMAP: width: 72, height: 1
+bitmap3 = bytearray([1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1])
+           
+# Make a sprite object using bytearray (a path to binary file from 'IMPORT SPRITE' is also valid)
+man = thumby.Sprite(8, 8, bitmap0)
+bullet = thumby.Sprite(1, 1, bitmap1)
+tank = thumby.Sprite(16, 8, bitmap2+bitmap2_1+bitmap2_2)
+enemy_tank = thumby.Sprite(16, 8, bitmap2+bitmap2_1+bitmap2_2, 50, 0, 0, 1)
+
+smoke = thumby.Sprite(1, 1, bitmap1)
+
+ground = thumby.Sprite(144, 1, bitmap3)
+
+# Set the FPS (without this call, the default fps is 30)
+thumby.display.setFPS(60)
+
+moveNum = 1
+
+fired = False
+
+smoke_time = 0
+
+tankFrame = 0
+
+smokeFrame = 0
+
+while(1):
+    t0 = time.ticks_ms()   # Get time (ms)
+    thumby.display.fill(0) # Fill canvas to black
+    
+    tank.setFrame(tankFrame%3)
+    
+    thumby.display.drawSprite(ground)
+    ground.x = 0
+    ground.y = 30
+    
+    if tank.y+8 < ground.y:
+        tank.y += 1
+    
+    if enemy_tank.y+8 < ground.y:
+        enemy_tank.y += 1
+
+    if thumby.buttonL.pressed():
+        tank.x -= moveNum
+        tankFrame -= 1
+        
+    if thumby.buttonR.pressed():
+        tank.x += moveNum
+        tankFrame += 1
+
+    if fired:
+        bullet.x += 1
+        thumby.display.drawSprite(bullet)
+        
+    if thumby.buttonA.justPressed():
+        bullet.x = tank.x+8
+        bullet.y = tank.y+1
+        bullet.x += 1
+        fired = True
+        thumby.display.drawSprite(bullet)
+    
+    if smoke_time == 0:
+        smoke.x = tank.x-1
+        smoke.y = tank.y+1
+        thumby.display.drawSprite(smoke)
+        smoke_time += 1
+    elif smoke_time%3==1:
+        smoke.y -= 1
+        smoke_time += 1
+        thumby.display.drawSprite(smoke)
+    elif smoke_time == 30:
+        smoke_time = 0
+        thumby.display.drawSprite(smoke)
+    else:
+        smoke_time += 1
+        thumby.display.drawSprite(smoke)
+    
+
+    # Display the bitmap using bitmap data, position, and bitmap dimensions
+    thumby.display.drawSprite(tank)
+    thumby.display.drawSprite(enemy_tank)
+    thumby.display.update()
